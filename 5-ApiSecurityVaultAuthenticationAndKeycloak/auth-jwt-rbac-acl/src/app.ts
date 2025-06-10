@@ -24,10 +24,6 @@ app.use(
         }
 );
 
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body
-})
-
 app.use("", userRouter)
 app.use(errorHandler);
 
