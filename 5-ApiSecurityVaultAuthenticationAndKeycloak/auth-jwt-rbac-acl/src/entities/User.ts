@@ -12,14 +12,14 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number | undefined;
 
-  @Column()
-  name: string | undefined;
+  @Column({ type: "varchar"})
+  name: string;
 
   @Column({ unique: true })
-  email!: string | undefined;
+  email: string;
 
   @Column()
-  password!: string;
+  password: string;
 
   @BeforeInsert()
   @BeforeUpdate()
