@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:3000
+@baseUrl = http://localhost:3000Add commentMore actions
 
 ### Create new user
 # @name createUserAction
@@ -6,7 +6,7 @@ POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-    "name: "John Doe",
+    "name": "John Doe",
     "email": "john@example.com",
     "password": "123456"
 }
@@ -16,6 +16,7 @@ Content-Type: application/json
 
 ### Get user by ID
 GET {{baseUrl}}/users/{{userId}}
+
 
 ### Update user
 PATCH {{baseUrl}}/users/{{userId}}
