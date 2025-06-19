@@ -12,6 +12,28 @@ app.use(express.json());
 app.use(logRequest);
 app.use(logResponse);
 
+const protectedRoutes = ['/protected', '/users']
+
+app.use((req, res, next) => {
+    const isProtectedRoute = protectedRoutes.some(route => req.url.startsWith(route))
+
+    if (!isProtectedRoute) {
+        return next();
+    }
+    const accessToken = req.headers.authorization?.replace('Bearer ', "");
+
+    if (!accessToken) {
+        throw new Error('Access Token not provided')
+    }
+    try {
+        const payload = jwt.verify(accessToken, 'secret')
+        console.log(payload);
+    } catch (error) {
+        res.status(401).json({ message: 'Invalid Access Token' });
+    }
+    next();
+})
+
 app.use(
     async (
         error: Error,
@@ -35,7 +57,7 @@ app.post("/login", async (req, res) => {
         throw new Error('Invalid credentials')
     }
     const accessToken = jwt.sign({ name: user.name, email: user.email }, 'secret');
-    res.json({ accessToken })
+    res.json({ access_token: accessToken })
 });
 
 app.use("", userRouter)
