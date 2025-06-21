@@ -3,7 +3,11 @@ import { logRequest, logResponse } from "./lib/log";
 import { loadFixtures } from "./fixtures";
 import { userRouter } from "./router/user-router";
 import { createDatabaseConnection } from "./database";
-import jwt from 'jsonwebtoken';
+import dotenv from "dotenv";
+import { InvalidAccessTokenError, InvalidCredentialsError, TokenNotProvidedError } from "./errors";
+import { AuthenticationService, createAuthenticationService } from "./services/AuthenticationService";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,7 +19,8 @@ app.use(logResponse);
 const protectedRoutes = ['/protected', '/users']
 
 app.use((req, res, next) => {
-    const isProtectedRoute = protectedRoutes.some(route => req.url.startsWith(route))
+    const isProtectedRoute = protectedRoutes.some(route =>
+        req.url.startsWith(route))
 
     if (!isProtectedRoute) {
         return next();
@@ -23,15 +28,17 @@ app.use((req, res, next) => {
     const accessToken = req.headers.authorization?.replace('Bearer ', "");
 
     if (!accessToken) {
-        throw new Error('Access Token not provided')
+        next(new TokenNotProvidedError());
+        return;
     }
     try {
-        const payload = jwt.verify(accessToken, 'secret')
+        const payload = AuthenticationService.verifyAccessToken(accessToken)
         console.log(payload);
+        next();
     } catch (error) {
-        res.status(401).json({ message: 'Invalid Access Token' });
+        next(new InvalidAccessTokenError({ options: { cause: error } }))
     }
-    next();
+    return;
 })
 
 app.use(
@@ -48,7 +55,7 @@ app.use(
     }
 );
 
-app.post("/login", async (req, res) => {
+app.post("/login", async (req, res, next) => {
     const { email, password } = req.body;
     const { userRepository } = await createDatabaseConnection();
     const user = await userRepository.findOne({ where: { email } });
@@ -56,8 +63,14 @@ app.post("/login", async (req, res) => {
     if (!user || !user.comparePassword(password)) {
         throw new Error('Invalid credentials')
     }
-    const accessToken = jwt.sign({ name: user.name, email: user.email }, 'secret');
-    res.json({ access_token: accessToken })
+    try {
+        const authService = await createAuthenticationService();
+        const accessToken = await authService.login(email, password);
+
+        res.json({ access_token: accessToken });
+    } catch (error) {
+        next(error);
+    }
 });
 
 app.use("", userRouter)
@@ -84,6 +97,7 @@ function errorHandler(
         stack: error.stack,
         cause: error.cause,
     };
+
     console.error("Error details:", JSON.stringify(errorDetails, (key, value) => {
         if (key === 'stack' && typeof value === 'string') {
             return value.split('\n').map(line => line.trim());
@@ -99,6 +113,22 @@ function errorHandler(
             return value;
         }, 2
         )
-    )
+    );
+
+    if (error instanceof TokenNotProvidedError) {
+        res.status(401).send({ message: "Token not provided" });
+        return;
+    }
+
+    if (error instanceof InvalidAccessTokenError) {
+        res.status(401).send({ message: "Invalid access token" });
+        return;
+    }
+
+    if (error instanceof InvalidCredentialsError) {
+        res.status(401).send({ message: "Invalid credentials" });
+        return;
+    }
+
     res.status(500).json({ error: "Internal Server Error" });
 }
