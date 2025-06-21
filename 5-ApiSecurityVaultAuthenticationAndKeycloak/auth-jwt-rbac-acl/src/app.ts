@@ -2,10 +2,10 @@ import express, { NextFunction } from "express";
 import { logRequest, logResponse } from "./lib/log";
 import { loadFixtures } from "./fixtures";
 import { userRouter } from "./router/user-router";
-import { createDatabaseConnection } from "./database";
 import dotenv from "dotenv";
-import { InvalidAccessTokenError, InvalidCredentialsError, TokenNotProvidedError } from "./errors";
+import { InvalidAccessTokenError, InvalidCredentialsError, TokenNotProvidedError, TokenExpiredError } from "./errors";
 import { AuthenticationService, createAuthenticationService } from "./services/AuthenticationService";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -36,9 +36,11 @@ app.use((req, res, next) => {
         console.log(payload);
         next();
     } catch (error) {
-        next(new InvalidAccessTokenError({ options: { cause: error } }))
+        if (error instanceof jwt.TokenExpiredError) {
+            return next(new TokenExpiredError({ options: { cause: error } }));
+        }
+        return next(new InvalidAccessTokenError({ options: { cause: error } }));
     }
-    return;
 })
 
 app.use(
@@ -57,21 +59,40 @@ app.use(
 
 app.post("/login", async (req, res, next) => {
     const { email, password } = req.body;
-    const { userRepository } = await createDatabaseConnection();
-    const user = await userRepository.findOne({ where: { email } });
 
-    if (!user || !user.comparePassword(password)) {
-        throw new Error('Invalid credentials')
-    }
     try {
         const authService = await createAuthenticationService();
-        const accessToken = await authService.login(email, password);
+        const tokens = await authService.login(email, password);
 
-        res.json({ access_token: accessToken });
+        res.json(tokens);
+    } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
+            return next(new TokenExpiredError({ options: { cause: error } }));
+        } else {
+            return next(new InvalidCredentialsError)
+        }
+    }
+});
+
+app.post("/refresh-token", async (req, res, next) => {
+    const refreshToken =
+        req.body?.refresh_token ||
+        req.headers.authorization?.replace("Bearer ", "");
+
+    if (!refreshToken) {
+        next(new TokenNotProvidedError());
+        return;
+    }
+
+    try {
+        const authService = await createAuthenticationService();
+        const tokens = await authService.doRefreshToken(refreshToken);
+
+        res.json(tokens);
     } catch (error) {
         next(error);
     }
-});
+})
 
 app.use("", userRouter)
 app.use(errorHandler);
@@ -127,6 +148,11 @@ function errorHandler(
 
     if (error instanceof InvalidCredentialsError) {
         res.status(401).send({ message: "Invalid credentials" });
+        return;
+    }
+
+    if (error instanceof TokenExpiredError) {
+        res.status(401).send({ message: "Token expired" });
         return;
     }
 

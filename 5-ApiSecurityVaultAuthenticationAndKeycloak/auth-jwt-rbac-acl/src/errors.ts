@@ -18,3 +18,17 @@ export class InvalidCredentialsError extends Error {
         this.name = "InvalidCredentialsError";
     }
 }
+
+export class TokenExpiredError extends Error {
+    constructor(params?: { message?: string; options?: ErrorOptions }) {
+        super(params?.message ?? "Token expired", params?.options);
+        this.name = "TokenExpiredError";
+    }
+}
+
+export class InvalidRefreshTokenError extends Error {
+    constructor(params?: { message?: string; options?: ErrorOptions }) {
+        super(params?.message ?? "Invalid refresh token", params?.options);
+        this.name = "InvalidRefreshTokenError";
+    }
+}
