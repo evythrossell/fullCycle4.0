@@ -90,7 +90,9 @@ app.post("/refresh-token", async (req, res, next) => {
 
         res.json(tokens);
     } catch (error) {
-        next(error);
+        if (error instanceof jwt.TokenExpiredError) {
+            return next(new TokenExpiredError({ options: { cause: error } }));
+        };
     }
 })
 
