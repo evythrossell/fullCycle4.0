@@ -1,11 +1,12 @@
-import express, { NextFunction } from "express";
+import express from "express";
 import { logRequest, logResponse } from "./lib/log";
 import { loadFixtures } from "./fixtures";
 import { userRouter } from "./router/user-router";
 import dotenv from "dotenv";
-import { InvalidAccessTokenError, InvalidCredentialsError, TokenNotProvidedError, TokenExpiredError } from "./errors";
+import { InvalidAccessTokenError, InvalidCredentialsError, TokenNotProvidedError, TokenExpiredError, NotFoundError } from "./errors";
 import { AuthenticationService, createAuthenticationService } from "./services/AuthenticationService";
 import jwt from "jsonwebtoken";
+import { createUserService } from "./services/UserService";
 
 dotenv.config();
 
@@ -18,7 +19,7 @@ app.use(logResponse);
 
 const protectedRoutes = ['/protected', '/users']
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
     const isProtectedRoute = protectedRoutes.some(route =>
         req.url.startsWith(route))
 
@@ -33,7 +34,10 @@ app.use((req, res, next) => {
     }
     try {
         const payload = AuthenticationService.verifyAccessToken(accessToken)
-        console.log(payload);
+        const userService = await createUserService();
+        const user = await userService.findById(+payload.sub);
+
+        req.user = user!;
         next();
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError) {
@@ -96,6 +100,10 @@ app.post("/refresh-token", async (req, res, next) => {
     }
 })
 
+app.get("/protected", (req, res) => {
+    res.status(200).json(req.user)
+});
+
 app.use("", userRouter)
 app.use(errorHandler);
 
@@ -155,6 +163,11 @@ function errorHandler(
 
     if (error instanceof TokenExpiredError) {
         res.status(401).send({ message: "Token expired" });
+        return;
+    }
+
+    if (error instanceof NotFoundError) {
+        res.status(404).json({ message: error.message })
         return;
     }
 

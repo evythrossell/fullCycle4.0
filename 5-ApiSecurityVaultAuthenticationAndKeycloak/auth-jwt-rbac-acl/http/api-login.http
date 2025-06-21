@@ -8,3 +8,7 @@ Content-Type: application/json
     "email": "admin@user.com",
     "password": "admin"
 }
+
+###
+GET {{baseUrl}}/protected
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQWRtaW4gVXNlciIsImVtYWlsIjoiYWRtaW5AdXNlci5jb20iLCJpYXQiOjE3NTA1NDI0MzcsImV4cCI6MTc1MDU0MjQ5Nywic3ViIjoiMSJ9.hSSBvQqt0dPuxBd9K-fYHKPOdGnKhK7FWnFLm5Cpvd8
