@@ -41,12 +41,16 @@ export class AuthenticationService {
         name: string;
         email: string;
         iat: number;
+        exp: number;
     } {
-        return jwt.verify(token, process.env.JWT_SECRET as string) as {
+        return jwt.verify(token, process.env.JWT_SECRET as string, {
+            algorithms: ["HS256"]
+        }) as {
             sub: string;
             name: string;
             email: string;
             iat: number;
+            exp: number;
         };
     }
 
@@ -66,12 +70,16 @@ export class AuthenticationService {
         name: string;
         email: string;
         iat: number;
+        exp: number;
     } {
-        return jwt.verify(token, process.env.JWT_SECRET as string) as {
+        return jwt.verify(token, process.env.JWT_SECRET as string, {
+            algorithms: ["HS256"]
+        }) as {
             sub: string;
             name: string;
             email: string;
             iat: number;
+            exp: number;
         };
     }
 

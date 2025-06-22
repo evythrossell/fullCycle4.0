@@ -7,6 +7,7 @@ import { InvalidAccessTokenError, InvalidCredentialsError, TokenNotProvidedError
 import { AuthenticationService, createAuthenticationService } from "./services/AuthenticationService";
 import jwt from "jsonwebtoken";
 import { createUserService } from "./services/UserService";
+import { createCartService } from "./services/CartService";
 
 dotenv.config();
 
@@ -46,6 +47,20 @@ app.use(async (req, res, next) => {
         return next(new InvalidAccessTokenError({ options: { cause: error } }));
     }
 })
+
+app.use(async (req, res, next) => {
+    if (!req.user) {
+        return next();
+    }
+
+    const cartService = await createCartService();
+    const cartToken = await cartService.generateCartToken(req.user.id);
+
+    if (cartToken) {
+        res.setHeader("X-Cart-Token", cartToken);
+    }
+    next();
+});
 
 app.use(
     async (
