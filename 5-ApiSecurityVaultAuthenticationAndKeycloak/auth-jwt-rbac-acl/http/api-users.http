@@ -1,0 +1,36 @@
+@baseUrl = http://localhost:3000
+@adminAccessToken = eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQWRtaW4gVXNlciIsImVtYWlsIjoiYWRtaW5AdXNlci5jb20iLCJpYXQiOjE3NTA2NDc2NzgsImV4cCI6MTc1MDY0NzczOCwic3ViIjoiMSJ9.LdVeoQBC4zoWWWe85icFimWqVvWtHpD1touHyUxqRo7cfWaJz3TdurRszt1RCv5MW9IErcjjL5wJmjPcLITAbgKgULpTSdbnJ2RATnOIq08JmJOdQk_TNstk30uUsqZQ1e1V_iD0igfiN8nsHCgOoXs3jF2vOqOzOdE72Oaf2WCHYdFnB6FMUck83hBRpS5Lp3RFZlAI0mSlLmNvWzGOFo4C5LSkzcuvu0K3byNCEkDBRkA_gI5NeUSci5rhbmjlckLrt3twD2aKqy2X9JYIKNzjxorzfPciHWTWJ10uS3viiIBgJWVB9W_F-lrLHHd7A5vCeF9Os9O5ZGY6aMQMSw
+
+### Create new user
+# @name createUserAction
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{adminAccessToken}}
+
+{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "123456"
+}
+
+###
+@userId = {{ createUserAction.response.body.id }}
+
+### Get user by ID
+GET {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{adminAccessToken}}
+
+### Update user
+PATCH {{baseUrl}}/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{adminAccessToken}}
+
+{
+    "name": "John Doe Updated",
+    "email": "john.updated@example.com",
+    "password": "654321"
+}
+
+### Delete user
+DELETE {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{adminAccessToken}}
