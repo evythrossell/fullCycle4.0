@@ -1,5 +1,5 @@
 import express from "express";
-import { logRequest, logResponse } from "./lib/log";
+import { logRequest, logResponse } from "../lib/log";
 import { loadFixtures } from "./fixtures";
 import { userRouter } from "./router/user-router";
 import dotenv from "dotenv";

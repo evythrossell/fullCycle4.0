@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-import { createDatabaseConnection } from "./database";
-import { loadFixtures } from "./fixtures";
+import { createDatabaseConnection } from "./auth-server/database";
+import { loadFixtures } from "./auth-server/fixtures";
 
 async function bootstrap() {
     await loadFixtures();
