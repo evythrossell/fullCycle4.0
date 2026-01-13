@@ -8,7 +8,6 @@ import { AuthenticationService, createAuthenticationService } from "./services/A
 import jwt from "jsonwebtoken";
 import { createUserService } from "./services/UserService";
 import { createCartService } from "./services/CartService";
-import cors from 'cors';
 
 dotenv.config();
 
@@ -16,7 +15,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(cors());
 app.use(logRequest);
 app.use(logResponse);
 
