@@ -1,7 +1,7 @@
 import { Repository } from "typeorm";
 import { Cart } from "../entities/Cart";
 import jwt from "jsonwebtoken";
-import { createDatabaseConnection } from "../database";
+import { createDatabaseConnection } from "../../../../jwt-app/src/auth-server/database";
 
 export class CartService {
     constructor(private cartRepository: Repository<Cart>) { }
